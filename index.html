@@ -803,7 +803,7 @@ html,body{
   <rect x="-50" y="860" width="1700" height="6" fill="#e8e0c0" opacity="0.4"/>
 
   <!-- ═══ THE BUS (UPSRTC - EXACT MATCH TO REFERENCE PHOTO) ═══ -->
-  <g transform="translate(340, 450) scale(1.15)">
+  <g id="bus-container" transform="translate(340, 450) scale(1.15)">
     <g class="bus-group">
     <!-- Bus shadow -->
     <ellipse cx="390" cy="205" rx="360" ry="20" fill="#000" opacity="0.25"/>
@@ -1083,6 +1083,25 @@ audioEl.preload = "none";
 audioEl.volume = 0.7;
 
 const scene = document.getElementById('scene');
+const busContainer = document.getElementById('bus-container');
+
+/* Keep the illustrated bus at a comfortable, readable size on every screen.
+   The SVG uses `slice`, so its rendered scale changes with the viewport ratio;
+   calculate the bus scale from the actual viewport rather than using one fixed
+   SVG transform. */
+function resizeBus(){
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const svgScale = Math.max(viewportWidth / 1600, viewportHeight / 900);
+  const busWidth = Math.min(860, Math.max(280, viewportWidth * (viewportWidth <= 600 ? 0.85 : 0.54)));
+  const busScale = busWidth / (745 * svgScale);
+  const busX = 800 - (382.5 * busScale) - 23;
+
+  busContainer.setAttribute('transform', `translate(${busX.toFixed(2)}, 450) scale(${busScale.toFixed(3)})`);
+}
+
+resizeBus();
+window.addEventListener('resize', resizeBus, {passive:true});
 const npTitle = document.getElementById('np-title');
 const npArtist = document.getElementById('np-artist');
 const playBtn = document.getElementById('play-btn');
