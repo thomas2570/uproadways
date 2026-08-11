@@ -1096,8 +1096,10 @@ function resizeBus(){
   const busWidth = Math.min(860, Math.max(280, viewportWidth * (viewportWidth <= 600 ? 0.85 : 0.54)));
   const busScale = busWidth / (745 * svgScale);
   const busX = 800 - (382.5 * busScale) - 23;
+  // The tyre base is y=222 inside the bus; place it on the road's top edge (y=660).
+  const busY = 660 - (222 * busScale);
 
-  busContainer.setAttribute('transform', `translate(${busX.toFixed(2)}, 450) scale(${busScale.toFixed(3)})`);
+  busContainer.setAttribute('transform', `translate(${busX.toFixed(2)}, ${busY.toFixed(2)}) scale(${busScale.toFixed(3)})`);
 }
 
 resizeBus();
