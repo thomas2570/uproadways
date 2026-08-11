@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UP Roadways Safar — Highway Radio</title>
+<meta name="description" content="UP Roadways Safar — 90s Bollywood bangers that play on the highway. Experience the nostalgia of a UPSRTC bus journey.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET & VARIABLES
+   ═══════════════════════════════════════════════════ */
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{
+  width:100%; height:100%; overflow:hidden;
+  font-family:'Inter', system-ui, -apple-system, sans-serif;
+  background:#0a0c10;
+  color:#fff;
+}
+
+/* ═══════════════════════════════════════════════════
+   FULLSCREEN SCENE CONTAINER
+   ═══════════════════════════════════════════════════ */
+.scene-canvas{
+  position:fixed; inset:0; z-index:0;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.scene-canvas svg{
+  width:100%; height:100%;
+  position:absolute; inset:0;
+}
+
+/* Bottom gradient overlay for player readability */
+.scene-overlay{
+  position:fixed; inset:0; z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(to bottom,
+      transparent 0%,
+      transparent 50%,
+      rgba(0,0,0,0.15) 65%,
+      rgba(0,0,0,0.55) 85%,
+      rgba(0,0,0,0.78) 100%
+    );
+}
+
+/* Top overlay for title area */
+.scene-overlay-top{
+  position:fixed; top:0; left:0; right:0; height:120px; z-index:1;
+  pointer-events:none;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%);
+}
+
+/* ═══════════════════════════════════════════════════
+   HEADER / CLOCK / PLAYLIST BTN
+   ═══════════════════════════════════════════════════ */
+.top-bar{
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding:1.5rem 2rem;
+  pointer-events:none;
+}
+.top-bar > *{ pointer-events:auto; }
+
+.clock{
+  font-family:'Inter', sans-serif; font-size:.9rem; font-weight:600;
+  color:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:999px;
+  padding:.4rem 1rem;
+}
+
+.live-badge{
+  display:flex; align-items:center; gap:.5rem;
+  font-size:.8rem; font-weight:500; color:rgba(255,255,255,0.6);
+  margin-top:.5rem;
+}
+.live-badge #live-count{ font-weight:700; color:#fff; }
+.live-dot{
+  position:relative; display:inline-flex; width:8px; height:8px;
+}
+.live-dot::before{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background:#4ade80;
+  animation:livePing 2s cubic-bezier(0,.4,.6,1) infinite;
+}
+.live-dot::after{
+  content:''; position:relative; display:block; width:8px; height:8px;
+  border-radius:50%; background:#4ade80;
+  box-shadow:0 0 8px rgba(74,222,128,0.9);
+}
+@keyframes livePing{
+  0%{ transform:scale(1); opacity:.75; }
+  75%,100%{ transform:scale(2.2); opacity:0; }
+}
+
+.playlist-btn-top{
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff; display:grid; place-items:center;
+  cursor:pointer; backdrop-filter:blur(10px);
+  transition:all 0.2s; outline:none;
+}
+.playlist-btn-top:hover{
+  background:rgba(255,255,255,0.2); transform:scale(1.05);
+}
+.playlist-btn-top svg{ width:20px; height:20px; fill:currentColor; }
+
+/* ═══════════════════════════════════════════════════
+   CENTER TITLE & HORN
+   ═══════════════════════════════════════════════════ */
+.center-title{
+  position:fixed; top:25%; left:50%; transform:translate(-50%, -50%);
+  z-index:5; text-align:center; pointer-events:none;
+}
+.center-title h1{
+  font-size:5.5rem; font-weight:900; color:#fff;
+  text-shadow:0 4px 20px rgba(0,0,0,0.5);
+  margin:0;
+}
+@media(max-width:600px){ .center-title h1{ font-size:3rem; } }
+
+.horn-btn{
+  position:fixed; left:2rem; top:50%; transform:translateY(-50%);
+  z-index:20; display:flex; align-items:center; gap:.8rem;
+  background:rgba(255,255,255,0.15); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px);
+  border:1px solid rgba(255,255,255,0.2); border-radius:999px;
+  padding:.5rem 1.2rem .5rem .5rem;
+  color:#fff; cursor:pointer; transition:all 0.2s;
+  outline:none;
+}
+.horn-btn:hover{ background:rgba(255,255,255,0.25); }
+.horn-btn:active{ transform:translateY(-50%) scale(0.95); }
+.horn-icon{
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(255,255,255,0.2); display:grid; place-items:center;
+}
+.horn-icon svg{ width:16px; height:16px; fill:currentColor; }
+.horn-text{ display:flex; flex-direction:column; text-align:left; }
+.horn-text strong{ font-size:.8rem; font-weight:700; line-height:1; margin-bottom:2px; }
+.horn-text span{ font-size:.55rem; opacity:0.7; }
+@media(max-width:800px){ .horn-btn{ left:1rem; padding:.5rem; } .horn-text{ display:none; } }
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS — SCENE ELEMENTS
+   ═══════════════════════════════════════════════════ */
+
+/* Wheels */
+.bus-wheel{
+  transform-box:fill-box; transform-origin:center;
+  animation:wheelSpin .5s linear infinite;
+  animation-play-state:paused;
+}
+.scene-playing .bus-wheel{ animation-play-state:running; }
+@keyframes wheelSpin{ to{ transform:rotate(360deg); } }
+
+/* Road dashes */
+.road-dash{
+  animation:dashFlow 0.8s linear infinite;
+  animation-play-state:paused;
+}
+.scene-playing .road-dash{ animation-play-state:running; }
+@keyframes dashFlow{
+  0%{ transform:translateX(0); }
+  100%{ transform:translateX(-120px); }
+}
+
+/* Cohesive Scenery Animation (Moves together) */
+.scenery-far, .scenery-mid, .scenery-near {
+  animation:scenerySync 6s ease-in-out infinite;
+  animation-play-state:paused;
+}
+.scene-playing .scenery-far,
+.scene-playing .scenery-mid,
+.scene-playing .scenery-near {
+  animation-play-state:running;
+}
+@keyframes scenerySync{
+  0%, 100% { transform:translateX(0); }
+  50% { transform:translateX(-30px); }
+}
+
+/* Clouds */
+.cloud{
+  animation:cloudDrift 20s linear infinite;
+  animation-play-state:paused;
+}
+.scene-playing .cloud{ animation-play-state:running; }
+@keyframes cloudDrift{
+  0%{ transform:translateX(0); }
+  100%{ transform:translateX(-80px); }
+}
+
+/* Bus subtle bounce */
+.bus-group{
+  animation:busBounce 0.8s ease-in-out infinite;
+  animation-play-state:paused;
+}
+.scene-playing .bus-group{ animation-play-state:running; }
+@keyframes busBounce{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-1.5px); }
+}
+
+/* ═══════════════════════════════════════════════════
+   PLAYER BAR — GLASSMORPHIC BOTTOM
+   ═══════════════════════════════════════════════════ */
+.player-bar{
+  position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+  z-index:20;
+  width:calc(100% - 2.5rem); max-width:680px;
+  display:flex; align-items:center; gap:1rem;
+  padding:.75rem 1.2rem .75rem 1rem;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(28px) saturate(1.6);
+  -webkit-backdrop-filter:blur(28px) saturate(1.6);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:999px;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition:box-shadow .3s;
+}
+.player-bar:hover{
+  box-shadow:
+    0 12px 48px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* Vinyl disc */
+.vinyl-wrap{
+  position:relative; flex-shrink:0;
+  width:56px; height:56px;
+}
+.vinyl{
+  width:100%; height:100%; border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%, #333 0%, #111 30%, #222 31%, #0d0d0d 100%);
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+  animation:vinylSpin 3s linear infinite;
+  animation-play-state:paused;
+  display:flex; align-items:center; justify-content:center;
+}
+.scene-playing .vinyl{ animation-play-state:running; }
+.vinyl-hole{
+  width:12px; height:12px; border-radius:50%;
+  background:rgba(0,0,0,0.7);
+  border:2px solid rgba(255,255,255,0.15);
+}
+.vinyl-groove{
+  position:absolute; inset:6px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.06);
+  pointer-events:none;
+}
+.vinyl-groove-2{
+  position:absolute; inset:14px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.04);
+  pointer-events:none;
+}
+@keyframes vinylSpin{
+  to{ transform:rotate(360deg); }
+}
+
+/* Track info */
+.track-info{
+  flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;
+}
+.track-info .now-label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.5rem; font-weight:600; letter-spacing:.16em;
+  color:rgba(255,255,255,0.4);
+  text-transform:uppercase;
+}
+.track-info .track-title{
+  font-size:.88rem; font-weight:700; color:#fff;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  text-shadow:0 1px 6px rgba(0,0,0,0.3);
+}
+.track-info .track-artist{
+  font-size:.68rem; font-weight:400; color:rgba(255,255,255,0.55);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Transport controls */
+.transport{
+  display:flex; align-items:center; gap:.35rem; flex-shrink:0;
+}
+.ctrl-btn{
+  background:none; border:none; cursor:pointer;
+  width:36px; height:36px; border-radius:50%;
+  display:grid; place-items:center;
+  color:rgba(255,255,255,0.7);
+  transition:all .15s;
+}
+.ctrl-btn:hover{
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+}
+.ctrl-btn:active{ transform:scale(0.92); }
+.ctrl-btn svg{ width:18px; height:18px; fill:currentColor; }
+
+.play-btn{
+  width:44px; height:44px;
+  background:#fff !important;
+  color:#000 !important;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+  transition:transform .15s, box-shadow .15s;
+}
+.play-btn:hover{
+  transform:scale(1.08) !important;
+  box-shadow:0 4px 18px rgba(0,0,0,0.4);
+  background:#fff !important;
+}
+.play-btn:active{ transform:scale(0.95) !important; }
+.play-btn svg{ width:20px; height:20px; }
+
+/* Seek bar (within player) */
+.seek-wrap{
+  position:absolute; bottom:-1px; left:1.5rem; right:1.5rem;
+  height:3px; cursor:pointer;
+  border-radius:0 0 999px 999px;
+  overflow:visible;
+}
+.seek-bg{
+  position:absolute; inset:0;
+  background:rgba(255,255,255,0.12);
+  border-radius:2px;
+}
+.seek-fill{
+  position:absolute; top:0; left:0; bottom:0;
+  background:rgba(255,255,255,0.7);
+  border-radius:2px;
+  width:0%;
+  transition:width 0.3s linear;
+}
+.seek-wrap:hover .seek-fill{
+  background:#fff;
+}
+.seek-thumb{
+  position:absolute; top:50%; width:10px; height:10px;
+  border-radius:50%; background:#fff;
+  transform:translate(-50%, -50%);
+  left:0%;
+  opacity:0; transition:opacity .2s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.4);
+}
+.seek-wrap:hover .seek-thumb{ opacity:1; }
+
+/* Time display */
+.time-display{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.58rem; color:rgba(255,255,255,0.4);
+  flex-shrink:0; white-space:nowrap;
+  min-width:56px; text-align:center;
+}
+
+/* Track selector sidebar */
+.track-selector{
+  position:fixed; top:0; right:-400px; bottom:0;
+  z-index:40;
+  width:380px; max-width:100vw;
+  background:rgba(10,12,16,0.95);
+  backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px);
+  border-left:1px solid rgba(255,255,255,0.1);
+  display:flex; flex-direction:column;
+  transition:right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:-10px 0 30px rgba(0,0,0,0.5);
+}
+.track-selector.open{ right:0; }
+
+.track-selector::-webkit-scrollbar{ width:4px; }
+.track-selector::-webkit-scrollbar-track{ background:transparent; }
+.track-selector::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.15); border-radius:4px; }
+#track-list{ flex:1; overflow-y:auto; padding-bottom:6rem; }
+
+.playlist-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.6rem .8rem .4rem;
+  font-size:.7rem; font-weight:600;
+  color:rgba(255,255,255,0.45);
+  letter-spacing:.06em; text-transform:uppercase;
+  font-family:'JetBrains Mono', monospace;
+}
+.playlist-close{
+  background:none; border:none; cursor:pointer;
+  color:rgba(255,255,255,0.4); font-size:1rem;
+  width:28px; height:28px; border-radius:50%;
+  display:grid; place-items:center;
+  transition:all .15s;
+}
+.playlist-close:hover{ background:rgba(255,255,255,0.1); color:#fff; }
+
+.track-item{
+  display:flex; align-items:center; gap:.7rem;
+  padding:.55rem .8rem; border-radius:10px;
+  cursor:pointer; transition:background .15s;
+}
+.track-item:hover{ background:rgba(255,255,255,0.07); }
+.track-item.active{ background:rgba(255,255,255,0.1); }
+.track-item .t-num{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.65rem; color:rgba(255,255,255,0.3);
+  width:20px; text-align:right; flex-shrink:0;
+}
+.track-item.active .t-num{ color:#4ade80; }
+.track-item .t-info{ min-width:0; flex:1; }
+.track-item .t-name{
+  font-size:.78rem; font-weight:600; color:rgba(255,255,255,0.9);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.track-item.active .t-name{ color:#fff; }
+.track-item .t-meta{
+  font-size:.6rem; color:rgba(255,255,255,0.35);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.track-item .t-eq{
+  width:16px; height:16px; flex-shrink:0;
+  display:none;
+}
+.track-item.active.playing .t-eq{ display:flex; align-items:flex-end; gap:1px; }
+.eq-bar{
+  width:3px; background:#4ade80; border-radius:1px;
+  animation:eqBounce 0.5s ease-in-out infinite alternate;
+}
+.eq-bar:nth-child(1){ height:6px; animation-delay:0s; }
+.eq-bar:nth-child(2){ height:10px; animation-delay:0.15s; }
+.eq-bar:nth-child(3){ height:4px; animation-delay:0.3s; }
+@keyframes eqBounce{
+  0%{ transform:scaleY(0.3); }
+  100%{ transform:scaleY(1); }
+}
+
+
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media(max-width:600px){
+  .top-bar{ padding:1rem; }
+  .clock{ font-size:.75rem; padding:.3rem .8rem; }
+  .live-badge{ font-size:.65rem; }
+
+  .player-bar{
+    bottom:1rem;
+    width:calc(100% - 1.5rem);
+    gap:.6rem;
+    padding:.6rem .9rem;
+    border-radius:20px;
+  }
+  .vinyl-wrap{ width:44px; height:44px; }
+  .track-info .track-title{ font-size:.78rem; }
+  .ctrl-btn{ width:32px; height:32px; }
+  .play-btn{ width:38px; height:38px; }
+  .play-btn svg{ width:16px; height:16px; }
+  .time-display{ display:none; }
+
+  .playlist-toggle{ bottom:5.2rem; }
+  .track-selector{ bottom:5.8rem; max-height:45vh; }
+}
+
+@media(prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ BRANDING HEADER ═══════════ -->
+<header class="top-bar">
+  <div class="clock" id="clock">8:06 pm</div>
+  
+  <div class="live-badge" style="display:none;">
+    <span class="live-dot"></span>
+    <span><span id="live-count">527</span> on the highway</span>
+  </div>
+
+  <button class="playlist-btn-top" id="playlist-toggle-top" aria-label="Toggle playlist">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+  </button>
+</header>
+
+<!-- ═══════════ CENTER TITLE ═══════════ -->
+<div class="center-title">
+  <h1 style="font-size:4rem; line-height:1.1;">Welcome to<br/>Uttar Pradesh</h1>
+</div>
+
+<!-- ═══════════ HORN BUTTON ═══════════ -->
+<button class="horn-btn" id="horn-btn" aria-label="Horn">
+  <div class="horn-icon">
+    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+  </div>
+  <div class="horn-text">
+    <strong>हॉर्न ओके प्लीज़</strong>
+    <span>Horn ok pleaseeee</span>
+  </div>
+</button>
+
+<!-- ═══════════ SCENE OVERLAYS ═══════════ -->
+<div class="scene-overlay-top"></div>
+<div class="scene-overlay"></div>
+
+<!-- ═══════════ FULLSCREEN SVG SCENE ═══════════ -->
+<div class="scene-canvas" id="scene">
+<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-label="UP Roadways bus travelling on an open highway under open sky">
+  <defs>
+    <!-- Sky gradient (Daytime) -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b9cf5"/>
+      <stop offset="30%" stop-color="#60baf7"/>
+      <stop offset="60%" stop-color="#9dd5fa"/>
+      <stop offset="100%" stop-color="#dbf0fa"/>
+    </linearGradient>
+
+    <!-- Mountain gradient -->
+    <linearGradient id="mtn1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a5a72"/>
+      <stop offset="100%" stop-color="#3a4a60"/>
+    </linearGradient>
+    <linearGradient id="mtn2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a6a7a"/>
+      <stop offset="100%" stop-color="#4a5868"/>
+    </linearGradient>
+
+    <!-- Green hill gradients -->
+    <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a7a38"/>
+      <stop offset="100%" stop-color="#3a6428"/>
+    </linearGradient>
+    <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a5e22"/>
+      <stop offset="100%" stop-color="#2a4a18"/>
+    </linearGradient>
+
+    <!-- Road gradient -->
+    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#555"/>
+      <stop offset="100%" stop-color="#333"/>
+    </linearGradient>
+
+    <!-- Bus body (cream upper + green lower with maroon stripe) -->
+    <linearGradient id="busBodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5edd6"/>
+      <stop offset="48%" stop-color="#ede4ce"/>
+      <stop offset="52%" stop-color="#1a6b4a"/>
+      <stop offset="100%" stop-color="#145538"/>
+    </linearGradient>
+
+    <!-- Window glass -->
+    <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a8d8e8"/>
+      <stop offset="40%" stop-color="#5a8a9a"/>
+      <stop offset="100%" stop-color="#1a3a48"/>
+    </linearGradient>
+
+    <!-- Tree crown -->
+    <radialGradient id="treeCrown" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#5a8a3a"/>
+      <stop offset="100%" stop-color="#2a5a1a"/>
+    </radialGradient>
+    <radialGradient id="treeCrown2" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#4a7a2e"/>
+      <stop offset="100%" stop-color="#1e4a0e"/>
+    </radialGradient>
+
+    <!-- Sun glow (Daytime) -->
+    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#fff5cc" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffea99" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ═══ SKY ═══ -->
+  <rect width="1600" height="900" fill="url(#sky)"/>
+
+  <!-- ═══ SUN ═══ -->
+  <circle cx="1200" cy="180" r="140" fill="url(#sunGlow)"/>
+  <circle cx="1200" cy="180" r="40" fill="#ffffff" opacity="0.95"/>
+
+  <!-- ═══ CLOUDS ═══ -->
+  <g class="cloud" opacity="0.35">
+    <ellipse cx="300" cy="140" rx="90" ry="22" fill="#dde8f0"/>
+    <ellipse cx="340" cy="132" rx="60" ry="18" fill="#e0eaf2"/>
+    <ellipse cx="270" cy="136" rx="50" ry="16" fill="#d8e4ee"/>
+  </g>
+  <g class="cloud" opacity="0.25" style="animation-delay:-8s">
+    <ellipse cx="900" cy="100" rx="75" ry="18" fill="#d0dce8"/>
+    <ellipse cx="940" cy="94" rx="50" ry="14" fill="#dae6f0"/>
+  </g>
+  <g class="cloud" opacity="0.2" style="animation-delay:-14s">
+    <ellipse cx="1400" cy="170" rx="65" ry="16" fill="#d4e0ec"/>
+    <ellipse cx="1430" cy="164" rx="45" ry="12" fill="#dce8f2"/>
+  </g>
+
+  <!-- ═══ SOLID GROUND LANDSCAPE BASE (No Sky Bleed) ═══ -->
+  <g class="scenery-far">
+    <!-- Solid continuous green land extending across full width under houses -->
+    <rect x="-100" y="410" width="1800" height="260" fill="#3c6e2a"/>
+    <path d="M-100 420 Q300 395 700 415 T1500 405 T1700 420 V670 H-100 Z" fill="#467c32"/>
+    <!-- Cluster 1 (Left) -->
+    <g transform="translate(80, 440)">
+      <rect x="20" y="25" width="40" height="25" fill="#dcb37e"/>
+      <polygon points="15,25 40,10 65,25" fill="#8c6733"/>
+      <rect x="35" y="35" width="10" height="15" fill="#5a3a1a"/>
+      
+      <rect x="65" y="15" width="50" height="35" fill="#c69a68"/>
+      <polygon points="55,15 90,-5 125,15" fill="#a67e45"/>
+      <rect x="80" y="30" width="15" height="20" fill="#4a2a10"/>
+      
+      <rect x="120" y="28" width="35" height="22" fill="#dcb37e"/>
+      <polygon points="115,28 137,12 160,28" fill="#8c6733"/>
+      <rect x="130" y="35" width="12" height="15" fill="#5a3a1a"/>
+    </g>
+
+    <!-- Cluster 2 -->
+    <g transform="translate(260, 465)">
+      <rect x="-20" y="5" width="45" height="30" fill="#dcb37e"/>
+      <polygon points="-28,5 2.5,-15 33,5" fill="#a67e45"/>
+      
+      <rect x="15" y="15" width="55" height="35" fill="#c69a68"/>
+      <polygon points="5,15 42,-10 80,15" fill="#8c6733"/>
+      <rect x="35" y="30" width="15" height="20" fill="#4a2a10"/>
+      
+      <rect x="75" y="25" width="40" height="25" fill="#dcb37e"/>
+      <polygon points="70,25 95,10 120,25" fill="#a67e45"/>
+      <rect x="85" y="35" width="10" height="15" fill="#5a3a1a"/>
+    </g>
+
+    <!-- Cluster 3 (Middle-left) -->
+    <g transform="translate(480, 450)">
+      <rect x="0" y="18" width="50" height="32" fill="#c69a68"/>
+      <polygon points="-8,18 25,0 58,18" fill="#8c6733"/>
+      <rect x="15" y="30" width="15" height="20" fill="#4a2a10"/>
+      
+      <rect x="55" y="10" width="60" height="40" fill="#dcb37e"/>
+      <polygon points="45,10 85,-15 125,10" fill="#a67e45"/>
+      <rect x="75" y="30" width="18" height="20" fill="#5a3a1a"/>
+      
+      <rect x="120" y="25" width="45" height="25" fill="#c69a68"/>
+      <polygon points="112,25 142,5 172,25" fill="#8c6733"/>
+      <rect x="135" y="35" width="12" height="15" fill="#4a2a10"/>
+    </g>
+
+    <!-- Cluster 4 (Middle-right) -->
+    <g transform="translate(780, 430)">
+      <rect x="-30" y="15" width="50" height="35" fill="#dcb37e"/>
+      <polygon points="-40,15 -5,-10 30,15" fill="#a67e45"/>
+      
+      <rect x="25" y="25" width="70" height="45" fill="#c69a68"/>
+      <polygon points="15,25 60,-5 105,25" fill="#8c6733"/>
+      <rect x="50" y="45" width="20" height="25" fill="#4a2a10"/>
+      
+      <rect x="100" y="20" width="55" height="35" fill="#dcb37e"/>
+      <polygon points="90,20 127,-5 165,20" fill="#a67e45"/>
+      <rect x="120" y="35" width="15" height="20" fill="#5a3a1a"/>
+      
+      <rect x="160" y="35" width="40" height="25" fill="#c69a68"/>
+      <polygon points="152,35 180,15 208,35" fill="#8c6733"/>
+    </g>
+
+    <!-- Cluster 5 (Right) -->
+    <g transform="translate(1150, 435)">
+      <rect x="0" y="20" width="60" height="40" fill="#dcb37e"/>
+      <polygon points="-10,20 30,-5 70,20" fill="#a67e45"/>
+      <rect x="20" y="35" width="15" height="25" fill="#4a2a10"/>
+      
+      <rect x="65" y="30" width="45" height="30" fill="#c69a68"/>
+      <polygon points="55,30 87,10 120,30" fill="#8c6733"/>
+      <rect x="80" y="45" width="12" height="15" fill="#5a3a1a"/>
+    </g>
+
+    <!-- Cluster 6 (Far right) -->
+    <g transform="translate(1380, 460)">
+      <rect x="-20" y="25" width="40" height="25" fill="#dcb37e"/>
+      <polygon points="-28,25 -0,10 28,25" fill="#a67e45"/>
+      
+      <rect x="25" y="15" width="50" height="30" fill="#c69a68"/>
+      <polygon points="17,15 50,-5 83,15" fill="#8c6733"/>
+      <rect x="43" y="25" width="14" height="20" fill="#5a3a1a"/>
+      
+      <rect x="80" y="22" width="45" height="25" fill="#dcb37e"/>
+      <polygon points="72,22 102,5 132,22" fill="#a67e45"/>
+    </g>
+  </g>
+
+  <!-- ═══ GREEN HILLS (DISTANT) ═══ -->
+  <g class="scenery-mid">
+    <path d="M-50 520 Q200 440 450 490 T900 460 T1350 485 T1650 470 V520Z" fill="url(#hill1)" opacity="0.85"/>
+    <path d="M-50 540 Q250 480 500 520 T950 495 T1400 515 T1650 500 V540Z" fill="url(#hill2)" opacity="0.9"/>
+
+    <!-- Distant trees (small) -->
+    <g fill="#2a5a16" opacity="0.7">
+      <ellipse cx="120" cy="505" rx="12" ry="18"/>
+      <ellipse cx="280" cy="498" rx="10" ry="15"/>
+      <ellipse cx="440" cy="510" rx="14" ry="20"/>
+      <ellipse cx="620" cy="495" rx="11" ry="16"/>
+      <ellipse cx="780" cy="502" rx="13" ry="18"/>
+      <ellipse cx="960" cy="492" rx="10" ry="15"/>
+      <ellipse cx="1140" cy="505" rx="12" ry="17"/>
+      <ellipse cx="1300" cy="498" rx="11" ry="16"/>
+      <ellipse cx="1460" cy="508" rx="14" ry="19"/>
+    </g>
+  </g>
+
+  <!-- ═══ GREEN LANDSCAPE FOREGROUND ═══ -->
+  <g class="scenery-near">
+    <!-- Continuous rolling green field across full screen (no middle gap) -->
+    <path d="M-100 530 Q200 500 500 535 T1100 520 T1700 535 V900 H-100Z" fill="#3a6a22"/>
+
+    <!-- Grass texture overlay -->
+    <path d="M-100 560 Q200 540 600 565 T1200 550 T1700 560 V900 H-100Z" fill="#2d5a18"/>
+
+    <!-- ═══ ROADSIDE TREES (LEFT) ═══ -->
+    <!-- Tree 1 - Banyan style (left, behind bus) -->
+    <g transform="translate(160, 460)">
+      <rect x="-4" y="30" width="8" height="60" fill="#5a3a1a" rx="2"/>
+      <ellipse cx="0" cy="20" rx="35" ry="40" fill="url(#treeCrown)"/>
+      <ellipse cx="-15" cy="30" rx="18" ry="22" fill="#3a7a22" opacity="0.7"/>
+      <ellipse cx="18" cy="28" rx="16" ry="20" fill="#4a8a30" opacity="0.6"/>
+    </g>
+
+    <!-- Tree 2 - Mango style (left) -->
+    <g transform="translate(60, 480)">
+      <rect x="-3" y="25" width="6" height="50" fill="#6a4a22" rx="2"/>
+      <ellipse cx="0" cy="12" rx="28" ry="32" fill="url(#treeCrown2)"/>
+      <ellipse cx="12" cy="18" rx="14" ry="18" fill="#3a6a1e" opacity="0.6"/>
+    </g>
+
+    <!-- Tree 3 - Neem style (left, closest) -->
+    <g transform="translate(320, 470)">
+      <rect x="-3" y="22" width="6" height="45" fill="#5a3818" rx="2"/>
+      <ellipse cx="0" cy="10" rx="25" ry="28" fill="url(#treeCrown)"/>
+      <ellipse cx="-10" cy="16" rx="15" ry="18" fill="#4a7a28" opacity="0.65"/>
+    </g>
+
+    <!-- ═══ ROADSIDE TREES (RIGHT) ═══ -->
+    <!-- Tree 4 - Large Banyan (right, behind bus) -->
+    <g transform="translate(1340, 455)">
+      <rect x="-5" y="32" width="10" height="65" fill="#5a3a1a" rx="2"/>
+      <ellipse cx="0" cy="18" rx="40" ry="45" fill="url(#treeCrown2)"/>
+      <ellipse cx="-20" cy="30" rx="20" ry="24" fill="#3a7228" opacity="0.65"/>
+      <ellipse cx="22" cy="26" rx="18" ry="22" fill="#4a8232" opacity="0.6"/>
+      <!-- Aerial roots -->
+      <line x1="-18" y1="40" x2="-20" y2="80" stroke="#5a3a1a" stroke-width="2" opacity="0.5"/>
+      <line x1="15" y1="42" x2="14" y2="78" stroke="#5a3a1a" stroke-width="2" opacity="0.5"/>
+    </g>
+
+    <!-- Tree 5 - Medium (right) -->
+    <g transform="translate(1480, 472)">
+      <rect x="-3" y="22" width="6" height="48" fill="#6a4820" rx="2"/>
+      <ellipse cx="0" cy="10" rx="26" ry="30" fill="url(#treeCrown)"/>
+      <ellipse cx="10" cy="16" rx="14" ry="17" fill="#3a6a1c" opacity="0.6"/>
+    </g>
+
+    <!-- Tree 6 - Small (right, far) -->
+    <g transform="translate(1550, 465)">
+      <rect x="-2" y="20" width="5" height="42" fill="#5a3a18" rx="1"/>
+      <ellipse cx="0" cy="10" rx="20" ry="24" fill="url(#treeCrown2)"/>
+    </g>
+
+    <!-- Small bushes -->
+    <ellipse cx="450" cy="575" rx="18" ry="10" fill="#2a5214" opacity="0.7"/>
+    <ellipse cx="1200" cy="572" rx="15" ry="9" fill="#2a5214" opacity="0.7"/>
+    <ellipse cx="680" cy="578" rx="12" ry="7" fill="#245010" opacity="0.6"/>
+    <ellipse cx="920" cy="576" rx="14" ry="8" fill="#245010" opacity="0.6"/>
+  </g>
+
+  <!-- ═══ ROAD (horizontal) ═══ -->
+  <rect x="-50" y="660" width="1700" height="240" fill="#444"/>
+  
+  <!-- Road top shoulder line -->
+  <rect x="-50" y="670" width="1700" height="4" fill="#e8e0c0" opacity="0.4"/>
+  
+  <!-- Road center dashes -->
+  <g class="road-dash" fill="#f5edc6" opacity="0.8">
+    <rect x="-10" y="760" width="60" height="12" rx="2"/>
+    <rect x="110" y="760" width="60" height="12" rx="2"/>
+    <rect x="230" y="760" width="60" height="12" rx="2"/>
+    <rect x="350" y="760" width="60" height="12" rx="2"/>
+    <rect x="470" y="760" width="60" height="12" rx="2"/>
+    <rect x="590" y="760" width="60" height="12" rx="2"/>
+    <rect x="710" y="760" width="60" height="12" rx="2"/>
+    <rect x="830" y="760" width="60" height="12" rx="2"/>
+    <rect x="950" y="760" width="60" height="12" rx="2"/>
+    <rect x="1070" y="760" width="60" height="12" rx="2"/>
+    <rect x="1190" y="760" width="60" height="12" rx="2"/>
+    <rect x="1310" y="760" width="60" height="12" rx="2"/>
+    <rect x="1430" y="760" width="60" height="12" rx="2"/>
+    <rect x="1550" y="760" width="60" height="12" rx="2"/>
+    <rect x="1670" y="760" width="60" height="12" rx="2"/>
+  </g>
+
+  <!-- Road bottom shoulder line -->
+  <rect x="-50" y="860" width="1700" height="6" fill="#e8e0c0" opacity="0.4"/>
+
+  <!-- ═══ THE BUS (UPSRTC - EXACT MATCH TO REFERENCE PHOTO) ═══ -->
+  <g transform="translate(340, 450) scale(1.15)">
+    <g class="bus-group">
+    <!-- Bus shadow -->
+    <ellipse cx="390" cy="205" rx="360" ry="20" fill="#000" opacity="0.25"/>
+
+    <!-- ═══ BUS BODY ═══ -->
+    <!-- Overall bus outer shell stroke & shadow -->
+    <!-- Sloped front nose and rounded roof -->
+    <path d="M10 20 H 685 Q 700 20 710 25 L 740 68 Q 755 90 755 105 V 175 Q 755 180 748 181 L 625 190 H 20 Q 10 190 10 185 Z" fill="#ff5500" stroke="#2a2a22" stroke-width="2.5"/>
+
+    <!-- Top Roof White Band -->
+    <path d="M10 20 H 685 Q 700 20 710 25 L 715 32 H 10 Z" fill="#ffffff"/>
+
+    <!-- White Mid-Body Panel (Runs across entire bus) -->
+    <rect x="10" y="94" width="745" height="48" fill="#ffffff"/>
+
+    <!-- Orange Skirt/Lower Body -->
+    <path d="M10 142 H 755 V 175 Q 755 180 748 181 L 625 190 H 20 Q 10 190 10 185 Z" fill="#ff5500"/>
+
+    <!-- Horizontal Yellow Separation Stripe -->
+    <rect x="10" y="139" width="745" height="4" fill="#ffcc00"/>
+
+    <!-- Green Curved Swoosh Stripes (Front & Rear) -->
+    <path d="M275 94 Q320 138 410 140 H650 Q560 115 500 94 Z" fill="#008833"/>
+    <path d="M620 94 Q640 120 670 140 H685 Q655 115 635 94 Z" fill="#008833"/>
+
+    <!-- ═══ WINDOWS BAND ═══ -->
+    <!-- Continuous Black Window Frame Band (Passenger Area to Driver) -->
+    <path d="M10 32 H 715 V 94 H 10 Z" fill="#151515" stroke="#222" stroke-width="1.5"/>
+
+    <!-- Side Passenger Windows -->
+    <rect x="18" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="87" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="156" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="225" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="294" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="363" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="432" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+    <rect x="501" y="34" width="65" height="56" rx="1" fill="url(#glassGrad)" opacity="0.85"/>
+
+    <!-- Passenger Window Dividers -->
+    <line x1="85" y1="34" x2="85" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="154" y1="34" x2="154" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="223" y1="34" x2="223" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="292" y1="34" x2="292" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="361" y1="34" x2="361" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="430" y1="34" x2="430" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="499" y1="34" x2="499" y2="92" stroke="#111" stroke-width="2"/>
+    <line x1="568" y1="34" x2="568" y2="92" stroke="#111" stroke-width="2"/>
+
+    <!-- PROMINENT WHITE HORIZONTAL GUARD RAILS (Across Passenger and Driver Windows) -->
+    <line x1="10" y1="68" x2="695" y2="68" stroke="#f0f0f0" stroke-width="2.5" opacity="0.95"/>
+    <line x1="10" y1="75" x2="695" y2="75" stroke="#f0f0f0" stroke-width="2.5" opacity="0.95"/>
+
+    <!-- Driver Door & Window -->
+    <!-- Driver Door Frame -->
+    <path d="M 605 32 H 695 V 178 H 605 Z" fill="none" stroke="#a03000" stroke-width="1.5"/>
+    <!-- Driver Window Frame (Black) -->
+    <rect x="605" y="32" width="90" height="62" fill="#151515" stroke="#222" stroke-width="1.5"/>
+    <!-- Driver Glass -->
+    <rect x="610" y="36" width="80" height="54" rx="2" fill="url(#glassGrad)" opacity="0.9"/>
+    <!-- Driver sliding window divider -->
+    <line x1="645" y1="36" x2="645" y2="90" stroke="#111" stroke-width="2"/>
+
+    <!-- Front Quarter Glass (Slanted) -->
+    <!-- Frame -->
+    <path d="M 715 32 L 740 68 Q 747 78 747 94 H 715 Z" fill="#151515" stroke="#222" stroke-width="1.5"/>
+    <!-- Glass -->
+    <path d="M 718 36 L 738 65 Q 744 75 744 91 H 718 Z" fill="url(#glassGrad)" opacity="0.9"/>
+
+    <!-- Side Rear View Mirror (Large Black) -->
+    <path d="M 725 45 H 745 V 80 H 725 Z" fill="#111" rx="3"/>
+    <path d="M 715 60 H 725 V 65 H 715 Z" fill="#222"/>
+
+    <!-- Glass Reflections -->
+    <rect x="25" y="36" width="10" height="25" fill="#fff" opacity="0.2"/>
+    <rect x="175" y="36" width="10" height="25" fill="#fff" opacity="0.2"/>
+    <rect x="330" y="36" width="10" height="25" fill="#fff" opacity="0.2"/>
+    <rect x="490" y="36" width="10" height="25" fill="#fff" opacity="0.2"/>
+    <rect x="620" y="36" width="10" height="25" fill="#fff" opacity="0.2"/>
+
+    <!-- ═══ BADGES & ADVERTISEMENTS ═══ -->
+    <!-- Kumbh Mela / UP Logo on Driver Door -->
+    <circle cx="650" cy="115" r="14" fill="#ffffff"/>
+    <circle cx="650" cy="115" r="12" fill="none" stroke="#d32f2f" stroke-width="1"/>
+    <!-- inner scribbles mimicking the logo -->
+    <path d="M 645 115 Q 650 108 655 115 Q 650 122 645 115" fill="#ff9900"/>
+
+    <!-- Uttar Pradesh Parivahan Text (Black) centered on body -->
+    <text x="450" y="115" font-family="'Noto Sans', Arial, sans-serif" font-size="16" font-weight="900" fill="#111111" letter-spacing="1" text-anchor="middle">उत्तर प्रदेश परिवहन</text>
+
+    <!-- Side Ad Poster (Mid Body) -->
+    <g transform="translate(160, 100)">
+      <rect x="0" y="0" width="55" height="22" rx="1" fill="#e8f0fe" stroke="#b0c4de" stroke-width="1"/>
+      <circle cx="15" cy="10" r="5" fill="#4285f4"/>
+      <circle cx="28" cy="10" r="5" fill="#ea4335"/>
+      <rect x="37" y="6" width="12" height="3" fill="#34a853"/>
+      <rect x="37" y="12" width="10" height="3" fill="#fbbc05"/>
+    </g>
+
+    <!-- Door Handles / Outlines -->
+    <rect x="145" y="96" width="1" height="92" fill="#aaa"/>
+    <!-- Driver Door Handle -->
+    <rect x="612" y="105" width="12" height="4" rx="2" fill="#222"/>
+
+    <!-- Black Vents / Grills on Skirt near front wheel -->
+    <rect x="690" y="150" width="8" height="20" fill="#111" rx="1"/>
+    <rect x="705" y="150" width="8" height="20" fill="#111" rx="1"/>
+    <rect x="720" y="150" width="8" height="20" fill="#111" rx="1"/>
+
+    <!-- Side Indicators / Markers -->
+    <rect x="742" y="145" width="6" height="15" rx="1" fill="#ff9900"/>
+    <rect x="18" y="150" width="8" height="5" rx="1" fill="#ff9900"/>
+    <rect x="375" y="150" width="8" height="5" rx="1" fill="#ffaa00"/>
+
+    <!-- Yellow License Plate (Rear only) -->
+    <g transform="translate(30, 166)">
+      <rect x="0" y="0" width="54" height="13" rx="1.5" fill="#ffd700" stroke="#333" stroke-width="1"/>
+      <text x="4" y="9.5" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="800" fill="#111" letter-spacing="0">UP32 SD4417</text>
+    </g>
+
+    <!-- ═══ UNDERBODY STEPS & CHASSIS ═══ -->
+    <rect x="320" y="190" width="55" height="8" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
+    <rect x="430" y="190" width="50" height="8" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
+
+    <!-- ═══ WHEELS (5-SPOKE ALLOY WHEELS LIKE REFERENCE PHOTO) ═══ -->
+    <!-- Front Wheel -->
+    <g class="bus-wheel">
+      <circle cx="585" cy="190" r="32" fill="#1a1a1a"/>
+      <circle cx="585" cy="190" r="24" fill="#333333"/>
+      <circle cx="585" cy="190" r="16" fill="#cccccc" stroke="#888" stroke-width="1.5"/>
+      <!-- 5 Spokes -->
+      <line x1="585" y1="190" x2="585" y2="176" stroke="#444" stroke-width="2.5"/>
+      <line x1="585" y1="190" x2="598" y2="182" stroke="#444" stroke-width="2.5"/>
+      <line x1="585" y1="190" x2="593" y2="202" stroke="#444" stroke-width="2.5"/>
+      <line x1="585" y1="190" x2="577" y2="202" stroke="#444" stroke-width="2.5"/>
+      <line x1="585" y1="190" x2="572" y2="182" stroke="#444" stroke-width="2.5"/>
+      <circle cx="585" cy="190" r="6" fill="#222"/>
+    </g>
+
+    <!-- Rear Wheel -->
+    <g class="bus-wheel">
+      <circle cx="250" cy="190" r="32" fill="#1a1a1a"/>
+      <circle cx="250" cy="190" r="24" fill="#333333"/>
+      <circle cx="250" cy="190" r="16" fill="#cccccc" stroke="#888" stroke-width="1.5"/>
+      <!-- 5 Spokes -->
+      <line x1="250" y1="190" x2="250" y2="176" stroke="#444" stroke-width="2.5"/>
+      <line x1="250" y1="190" x2="263" y2="182" stroke="#444" stroke-width="2.5"/>
+      <line x1="250" y1="190" x2="258" y2="202" stroke="#444" stroke-width="2.5"/>
+      <line x1="250" y1="190" x2="242" y2="202" stroke="#444" stroke-width="2.5"/>
+      <line x1="250" y1="190" x2="237" y2="182" stroke="#444" stroke-width="2.5"/>
+      <circle cx="250" cy="190" r="6" fill="#222"/>
+    </g>
+
+    <!-- Wheel Mudguards -->
+    <path d="M545 190 Q545 156 585 156 Q625 156 625 190" fill="none" stroke="#222" stroke-width="3"/>
+    <path d="M210 190 Q210 156 250 156 Q290 156 290 190" fill="none" stroke="#222" stroke-width="3"/>
+    </g>
+  </g>
+
+  <!-- ═══ FOREGROUND ROAD EDGES ═══ -->
+  <!-- Removed perspective road edges since the road is now horizontal -->
+
+  <!-- ═══ BIRDS ═══ -->
+  <g stroke="#2a3040" stroke-width="1.5" fill="none" opacity="0.5">
+    <path d="M350 120 q5-5 10 0 q5-5 10 0"/>
+    <path d="M380 135 q4-4 8 0 q4-4 8 0"/>
+    <path d="M1100 150 q5-5 10 0 q5-5 10 0"/>
+    <path d="M1130 138 q4-4 8 0 q4-4 8 0"/>
+  </g>
+
+  <!-- ═══ MILESTONE ═══ -->
+  <g class="scenery-near">
+    <g transform="translate(300, 655)">
+      <rect x="-8" y="-22" width="16" height="30" rx="2" fill="#f5edd6" stroke="#888" stroke-width="1"/>
+      <text x="0" y="-8" font-family="Arial" font-size="6" fill="#1a6b4a" text-anchor="middle" font-weight="700">NH</text>
+      <text x="0" y="0" font-family="Arial" font-size="5" fill="#333" text-anchor="middle">28</text>
+    </g>
+  </g>
+
+</svg>
+</div>
+
+
+
+<!-- ═══════════ TRACK SELECTOR (PLAYLIST PANEL) ═══════════ -->
+<div class="track-selector" id="track-selector" role="listbox" aria-label="90s Bollywood playlist">
+  <div class="playlist-header">
+    <span>Highway Radio</span>
+    <button class="playlist-close" id="playlist-close" aria-label="Close playlist">✕</button>
+  </div>
+  <div id="track-list"></div>
+</div>
+
+<!-- ═══════════ PLAYER BAR ═══════════ -->
+<div class="player-bar" id="player-bar">
+  <!-- Vinyl disc -->
+  <div class="vinyl-wrap">
+    <div class="vinyl" id="vinyl">
+      <div class="vinyl-hole"></div>
+    </div>
+    <div class="vinyl-groove"></div>
+    <div class="vinyl-groove-2"></div>
+  </div>
+
+  <!-- Track info -->
+  <div class="track-info">
+    <span class="now-label">NOW PLAYING</span>
+    <div class="track-title" id="np-title">Tap play to start</div>
+    <div class="track-artist" id="np-artist">—</div>
+  </div>
+
+  <!-- Time -->
+  <div class="time-display" id="time-display">0:00</div>
+
+  <!-- Transport controls -->
+  <div class="transport">
+    <button class="ctrl-btn" id="prev-btn" aria-label="Previous track">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+    </button>
+    <button class="ctrl-btn play-btn" id="play-btn" aria-label="Play" aria-pressed="false">
+      <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="ctrl-btn" id="next-btn" aria-label="Next track">
+      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    </button>
+  </div>
+
+  <!-- Seek bar -->
+  <div class="seek-wrap" id="seek-wrap" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="seek-bg"></div>
+    <div class="seek-fill" id="seek-fill"></div>
+    <div class="seek-thumb" id="seek-thumb"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   PLAYLIST DATA — 20 iconic 90s Bollywood tracks
+   ═══════════════════════════════════════════════════ */
+const playlist = [
+  {title:"Mujhse Mohabbat Ka", artist:"Kumar Sanu & Alka Yagnik", film:"Hum Hain Rahi Pyar Ke"},
+  {title:"Tumsa Koi Pyaara", artist:"Kumar Sanu & Alka Yagnik", film:"Khuddar"},
+  {title:"Pehli Pehli Baar Mohabbat", artist:"Kumar Sanu & Alka Yagnik", film:"Sirf Tum"},
+  {title:"Tumhein Dekhen Meri Aankhen", artist:"Alka Yagnik & Kumar Sanu", film:"Rang"},
+  {title:"Saaton Janam Main Tere", artist:"Kumar Sanu & Alka Yagnik", film:"Dilwale"},
+  {title:"Aaye Ho Meri Zindagi Mein", artist:"Udit Narayan", film:"Raja Hindustani"},
+  {title:"Mujhse Mohabbat Ka", artist:"Kumar Sanu & Alka Yagnik", film:"Hum Hain Rahi Pyar Ke"},
+  {title:"Dheere Dheere Pyar Ko", artist:"Kumar Sanu, Alka Yagnik", film:"Phool Aur Kaante"},
+  {title:"Tumhein Dekhen Meri Aankhen", artist:"Alka Yagnik & Kumar Sanu", film:"Rang"},
+  {title:"Tere Dar Par Sanam", artist:"Kumar Sanu", film:"Phir Teri Kahani Yaad Aayee"},
+  {title:"Barsat Ke Mausam Mein", artist:"Kumar Sanu", film:"Naajayaz"},
+  {title:"Tumse Milne Ko Dil", artist:"Alka Yagnik & Kumar Sanu", film:"Phool Aur Kaante"},
+  {title:"Kahin Mujhe Pyar Hua To Nahin", artist:"Kumar Sanu, Alka Yagnik", film:"90s Hits"},
+  {title:"Jeeta Tha Jiske Liye", artist:"Kumar Sanu, Alka Yagnik", film:"Dilwale"},
+  {title:"Is Tarah Aashiqui Ka", artist:"Kumar Sanu", film:"Imtihan"},
+  {title:"Chori Chori Dil Tera", artist:"Kumar Sanu", film:"Phool Aur Kaante"},
+  {title:"Tu Jo Hans Hans Ke", artist:"Udit Narayan, Kavita Krishnamurthy", film:"Raja Bhaiya"},
+  {title:"Raah Mein Unse Mulaqat", artist:"Kumar Sanu & Alka Yagnik", film:"Vijaypath"},
+  {title:"Tumhein Apna Banane Ki Kasam Khai Hai", artist:"Anuradha Paudwal & Kumar Sanu", film:"Sadak"},
+  {title:"Kitna Haseen Chehra", artist:"Kumar Sanu", film:"Dilwale"}
+];
+
+// Removed audio synthesis engine. We will use a reliable public MP3 instead.
+
+/* ═══════════════════════════════════════════════════
+   PLAYER STATE & DOM
+   ═══════════════════════════════════════════════════ */
+const DURATION = 24;
+let audioCache = {};
+let current = 0;
+let isPlaying = false;
+let trackLoading = false;
+const audioEl = new Audio();
+audioEl.preload = "none";
+audioEl.volume = 0.7;
+
+const scene = document.getElementById('scene');
+const npTitle = document.getElementById('np-title');
+const npArtist = document.getElementById('np-artist');
+const playBtn = document.getElementById('play-btn');
+const playIcon = document.getElementById('play-icon');
+const seekFill = document.getElementById('seek-fill');
+const seekThumb = document.getElementById('seek-thumb');
+const seekWrap = document.getElementById('seek-wrap');
+const timeDisplay = document.getElementById('time-display');
+const trackListEl = document.getElementById('track-list');
+const trackSelector = document.getElementById('track-selector');
+const playlistClose = document.getElementById('playlist-close');
+let audioCtx = null;
+
+const PLAY_PATH = "M8 5v14l11-7z";
+const PAUSE_PATH = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
+
+function fmt(s){
+  if(!isFinite(s)) s = 0;
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+/* ═══════════════════════════════════════════════════
+   PLAYLIST RENDERING
+   ═══════════════════════════════════════════════════ */
+function renderPlaylist(){
+  let html = '';
+  const trackCountLabel = document.querySelector('.playlist-header span');
+  if(trackCountLabel) {
+    trackCountLabel.textContent = `Highway Radio · ${playlist.length} Tracks`;
+  }
+
+  playlist.forEach((t, i) => {
+    const active = i === current;
+    const playing = active && isPlaying;
+    html += `<div class="track-item${active?' active':''}${playing?' playing':''}" data-i="${i}" role="option" aria-selected="${active}">
+      <span class="t-num">${String(i+1).padStart(2,'0')}</span>
+      <div class="t-info">
+        <div class="t-name">${t.title}</div>
+        <div class="t-meta">${t.artist} · ${t.film}</div>
+      </div>
+      <div class="t-eq"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>
+    </div>`;
+  });
+  trackListEl.innerHTML = html;
+  trackListEl.querySelectorAll('.track-item').forEach(row => {
+    row.addEventListener('click', () => loadTrack(parseInt(row.dataset.i), true));
+  });
+}
+renderPlaylist();
+
+/* Playlist toggle */
+// Handled by top button event listener at end of script
+playlistClose.addEventListener('click', () => {
+  trackSelector.classList.remove('open');
+});
+
+/* ═══════════════════════════════════════════════════
+   PLAYBACK
+   ═══════════════════════════════════════════════════ */
+const actualAudioUrls = [
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Apne%20Pyar%20Ke%20Sapne.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Aye%20Mere%20Humsafar.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Bijli%20Girate%20Hosh%20Udate.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Chandni%20O%20Meri%20Chandni.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Chandni%20Raat%20Mein.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Gazab%20Ka%20Hai%20Din.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Gunja%20Re%20Chandan.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/HAWA%20HAWA%20E%20HAWA.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/I%20Love%20You.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/In%20Aankhon%20Ki%20Masti%20Ke.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Laila%20Main%20Laila.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Mara%20Thumka.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Megha%20Re%20Megha%20Re.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Mehbooba%20Mehbooba.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Mehbooba%20O%20Mehbooba.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Mujhe%20Chhu%20Rahi%20Hain%20Teri%20Garm%20Saansen.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Na%20Jaane%20Kya%20Hua.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Neele%20Neele%20Ambar%20Par.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Papa%20Kehte%20Hain.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Parbat%20Se%20Kali%20Ghata%20Takrai.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Pehli%20Pehli%20Baar%20Mohabbat%20Ki%20Hai.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Pyar%20Ka%20Dard%20Hai.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Pyar%20Ka%20Tohfa.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Teri%20Yaad%20Aa%20Gayee.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/Teri%20Zindagi%20Ke%20Ragini%20Par.mp3",
+  "https://archive.org/download/PehliPehliBaarMohabbatKiHai_201512/julie%20julie.mp3"
+];
+
+async function getTrackUrl(i){
+  // Map the track index i to one of the 26 real MP3 URLs so the music changes every time!
+  return actualAudioUrls[i % actualAudioUrls.length];
+}
+
+async function loadTrack(i, autoplay){
+  current = i;
+  const t = playlist[i];
+  npTitle.textContent = t.title;
+  npArtist.textContent = `${t.artist} · ${t.film}`;
+  renderPlaylist();
+  const url = await getTrackUrl(i);
+  audioEl.src = url;
+  audioEl.currentTime = 0;
+  if(autoplay){
+    await doPlay();
+  } else {
+    updateUI();
+  }
+}
+
+async function doPlay(){
+  try{
+    await audioEl.play();
+    isPlaying = true;
+    updateUI();
+    setSceneMotion(true);
+    renderPlaylist();
+  }catch(e){
+    isPlaying = false;
+    updateUI();
+    npTitle.textContent = "Tap Play again";
+    console.warn("Playback blocked:", e);
+  }
+}
+
+function doPause(){
+  audioEl.pause();
+  isPlaying = false;
+  updateUI();
+  setSceneMotion(false);
+  renderPlaylist();
+}
+
+function updateUI(){
+  playIcon.innerHTML = isPlaying
+    ? `<path d="${PAUSE_PATH}"/>`
+    : `<path d="${PLAY_PATH}"/>`;
+  playBtn.setAttribute('aria-pressed', isPlaying);
+  playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+}
+
+function setSceneMotion(on){
+  scene.classList.toggle('scene-playing', on);
+}
+
+/* ═══════════════════════════════════════════════════
+   EVENT LISTENERS
+   ═══════════════════════════════════════════════════ */
+playBtn.addEventListener('click', async () => {
+  if(trackLoading) return;
+  if(!audioEl.src){ await loadTrack(current, true); return; }
+  isPlaying ? doPause() : await doPlay();
+});
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  loadTrack((current - 1 + playlist.length) % playlist.length, true);
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  loadTrack((current + 1) % playlist.length, true);
+});
+
+audioEl.addEventListener('ended', () => {
+  loadTrack((current + 1) % playlist.length, true);
+});
+
+audioEl.addEventListener('error', () => {
+  isPlaying = false;
+  updateUI();
+  npTitle.textContent = "Unable to tune in";
+  setSceneMotion(false);
+});
+
+audioEl.addEventListener('timeupdate', () => {
+  const pct = audioEl.duration ? (audioEl.currentTime / audioEl.duration * 100) : 0;
+  seekFill.style.width = pct + '%';
+  seekThumb.style.left = pct + '%';
+  seekWrap.setAttribute('aria-valuenow', Math.round(pct));
+  timeDisplay.textContent = fmt(audioEl.currentTime);
+});
+
+/* Seek bar interaction */
+let isSeeking = false;
+function seekTo(e){
+  const rect = seekWrap.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  seekFill.style.width = (pct*100) + '%';
+  seekThumb.style.left = (pct*100) + '%';
+  if(audioEl.duration) audioEl.currentTime = pct * audioEl.duration;
+}
+seekWrap.addEventListener('mousedown', (e) => { isSeeking = true; seekTo(e); });
+window.addEventListener('mousemove', (e) => { if(isSeeking) seekTo(e); });
+window.addEventListener('mouseup', () => { isSeeking = false; });
+seekWrap.addEventListener('touchstart', (e) => { isSeeking = true; seekTo(e.touches[0]); }, {passive:true});
+window.addEventListener('touchmove', (e) => { if(isSeeking) seekTo(e.touches[0]); }, {passive:true});
+window.addEventListener('touchend', () => { isSeeking = false; });
+
+/* ═══════════════════════════════════════════════════
+   INIT — Pre-render first track
+   ═══════════════════════════════════════════════════ */
+setSceneMotion(false);
+trackLoading = true;
+playBtn.style.opacity = '0.5';
+loadTrack(0, false).finally(() => {
+  trackLoading = false;
+  playBtn.style.opacity = '1';
+  npTitle.textContent = playlist[current].title;
+  npArtist.textContent = `${playlist[current].artist} · ${playlist[current].film}`;
+});
+
+/* ═══════════════════════════════════════════════════
+   CLOCK & LIVE COUNT
+   ═══════════════════════════════════════════════════ */
+function updateClock(){
+  const now = new Date();
+  let h = now.getHours();
+  let m = now.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  m = m < 10 ? '0'+m : m;
+  document.getElementById('clock').textContent = `${h}:${m} ${ampm}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+let liveCount = 527;
+setInterval(() => {
+  liveCount += Math.floor(Math.random() * 5) - 2;
+  document.getElementById('live-count').textContent = liveCount;
+}, 5000);
+
+/* ═══════════════════════════════════════════════════
+   HORN AUDIO SYNTHESIS
+   ═══════════════════════════════════════════════════ */
+document.getElementById('horn-btn').addEventListener('click', () => {
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  const master = audioCtx.createGain();
+  master.connect(audioCtx.destination);
+  master.gain.value = 0;
+  master.gain.setTargetAtTime(0.5, audioCtx.currentTime, 0.02);
+  master.gain.setTargetAtTime(0, audioCtx.currentTime + 0.5, 0.1);
+  
+  // Dissonant loud chords (Indian truck horn style)
+  const freqs = [350, 420, 470]; 
+  freqs.forEach(f => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = f;
+    osc.connect(master);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1);
+  });
+});
+
+/* Update playlist toggle to top right button */
+document.getElementById('playlist-toggle-top').addEventListener('click', () => {
+  trackSelector.classList.toggle('open');
+});
+</script>
+
+</body>
+</html>
